@@ -25,6 +25,8 @@ Type: `@Counter` or `@RedInput` in the div to import the corresponding component
 ## Some info
 
 - `ReactDOM` require a root element. In order to not lose the children of the element, a `span` is created and used as root.
+- `contentEditable` is used instead of `-webkit-user-modify: read-write-plaintext-only` because of an issue when deleting a line in editable div.
+  Consequently, you should not forget to set `contentEditable={false}` to the React component.
 
 ## Code
 
