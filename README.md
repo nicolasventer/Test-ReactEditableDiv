@@ -1,29 +1,103 @@
-![Showcase](./Showcase.gif)
+# Test React Editable Div
 
-# React + TypeScript + Vite
+This project is a test of importing React components by editing the content of a div.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Demo
 
-Currently, two official plugins are available:
+![Showcase](./misc/Showcase.gif)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## Expanding the ESLint configuration
+- insert a React component to a DOM element at a specific position
+- keep state of React component
+- support any React component
+- support deletion of imported React component
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+## Testing
 
-- Configure the top-level `parserOptions` property like this:
-
-```js
-   parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-   },
+```bash
+npm install
+npm run dev
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+Type: `@Counter` or `@RedInput` in the div to import the corresponding component.
+
+## Some info
+
+- `ReactDOM` require a root element. In order to not lose the children of the element, a `span` is created and used as root.
+
+## Code
+
+Content of [src/App.tsx](src/App.tsx):
+
+```tsx
+import React, { useState } from "react";
+import ReactDOM from "react-dom/client";
+import "./App.css";
+
+const Counter = () => {
+	const [count, setCount] = useState(0);
+	// Do not forget to set contentEditable={false}
+	return (
+		<button contentEditable={false} onClick={() => setCount((count) => count + 1)}>
+			count is {count}
+		</button>
+	);
+};
+
+const RedInput = () => {
+	const [text, setText] = useState("hello");
+	// Do not forget to set contentEditable={false}
+	return <input contentEditable={false} style={{ color: "red" }} value={text} onChange={(e) => setText(e.target.value)} />;
+};
+
+const COMPONENTS = [Counter, RedInput];
+const SPLITER = "@";
+
+const insertAfter = (textContent: string, existingNode: Node) => {
+	const tmpDiv = document.createElement("div");
+	tmpDiv.textContent = textContent;
+	return existingNode.parentNode!.insertBefore(tmpDiv, existingNode.nextSibling);
+};
+
+const EditableDiv = () => {
+	const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
+		const innerHTML = e.currentTarget.innerHTML;
+		for (const Comp of COMPONENTS) {
+			if (innerHTML.includes(SPLITER + Comp.name)) {
+				e.currentTarget.childNodes.forEach((child) => {
+					const textContent = child.textContent ?? "";
+					const index = textContent.indexOf(SPLITER + Comp.name);
+					if (index !== -1) {
+						const textBefore = textContent.slice(0, index);
+						const textAfter = textContent.slice(index + SPLITER.length + Comp.name.length);
+						child.textContent = textBefore;
+						// then insert new div after current child
+						const child_ = insertAfter("", child);
+						// replace new div with Component
+						const newChild = ReactDOM.createRoot(child_);
+						newChild.render(<Comp />);
+						// if there is text after --> create new div
+						if (textAfter) insertAfter(textAfter, child_);
+					}
+				});
+			}
+		}
+	};
+
+	return (
+		<div
+			key={Math.random()}
+			style={{ border: "solid white" }}
+			contentEditable
+			suppressContentEditableWarning
+			spellCheck={false}
+			onInput={handleInput}
+		></div>
+	);
+};
+
+const App = () => <EditableDiv />;
+
+export default App;
+```

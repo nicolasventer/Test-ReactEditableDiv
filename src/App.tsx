@@ -4,6 +4,7 @@ import "./App.css";
 
 const Counter = () => {
 	const [count, setCount] = useState(0);
+	// Do not forget to set contentEditable={false}
 	return (
 		<button contentEditable={false} onClick={() => setCount((count) => count + 1)}>
 			count is {count}
@@ -13,6 +14,7 @@ const Counter = () => {
 
 const RedInput = () => {
 	const [text, setText] = useState("hello");
+	// Do not forget to set contentEditable={false}
 	return <input contentEditable={false} style={{ color: "red" }} value={text} onChange={(e) => setText(e.target.value)} />;
 };
 
@@ -30,7 +32,7 @@ const EditableDiv = () => {
 		const innerHTML = e.currentTarget.innerHTML;
 		for (const Comp of COMPONENTS) {
 			if (innerHTML.includes(SPLITER + Comp.name)) {
-				e.currentTarget.childNodes.forEach((child, key) => {
+				e.currentTarget.childNodes.forEach((child) => {
 					const textContent = child.textContent ?? "";
 					const index = textContent.indexOf(SPLITER + Comp.name);
 					if (index !== -1) {
